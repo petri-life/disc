@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { SignalStage } from '../components/SignalStage'
 import { Composer } from '../components/Composer'
@@ -15,25 +15,31 @@ export function Home() {
     document.title = 'Petri Disc — Synthetic Discussion'
   }, [])
 
-  useEffect(() => {
-    if (tokenLoading) return
+  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+
+  const fetchList = useCallback(() => {
     api.listConversations()
       .then(list => {
         const sorted = list
           .filter(c => c.status !== 'failed')
           .sort((a, b) => {
-            // Active conversations first
             const aActive = a.status === 'running' || a.status === 'queued' ? 1 : 0
             const bActive = b.status === 'running' || b.status === 'queued' ? 1 : 0
             if (bActive !== aActive) return bActive - aActive
-            // Then by score
             return b.score - a.score
           })
           .slice(0, 10)
         setPopular(sorted)
       })
       .catch(() => {})
-  }, [tokenLoading])
+  }, [])
+
+  useEffect(() => {
+    if (tokenLoading) return
+    fetchList()
+    timerRef.current = setInterval(fetchList, 10000)
+    return () => { if (timerRef.current) clearInterval(timerRef.current) }
+  }, [tokenLoading, fetchList])
 
   return (
     <>
