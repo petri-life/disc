@@ -1,0 +1,39 @@
+:root {
+  /* ── Palette (warm cream/orange) ── */
+  --bg: #f4ecdf;
+  --bg-deep: #ece1d1;
+  --panel: rgba(255, 251, 245, 0.82);
+  --panel-strong: rgba(255, 253, 249, 0.94);
+  --panel-soft: rgba(249, 241, 230, 0.72);
+  --line: rgba(97, 74, 47, 0.15);
+  --line-strong: rgba(164, 92, 34, 0.24);
+  --text: #1f1712;
+  --text-secondary: #4d3f34;
+  --muted: #77685d;
+  --accent: #b05b24;
+  --accent-soft: #d98345;
+  --mint: #86aea3;
+
+  /* ── Shared with petri.life ── */
+  --petri-green: #4ade80;
+
+  /* ── Shadows ── */
+  --shadow: 0 20px 50px rgba(96, 69, 39, 0.07);
+  --shadow-soft: 0 8px 22px rgba(96, 69, 39, 0.05);
+
+  /* ── Radii ── */
+  --radius-xl: 22px;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+
+  /* ── Typography ── */
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ── Dynamic sentiment (updated by JS) ── */
+  --sentiment-light: #d57a31;
+  --sentiment-light-shadow: rgba(213, 122, 49, 0.14);
+}
