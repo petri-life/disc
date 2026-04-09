@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { SignalStage } from '../components/SignalStage'
 import { Composer } from '../components/Composer'
@@ -7,19 +7,27 @@ import { api } from '../api/client'
 import { useToken } from '../api/token'
 import type { ConversationSummary } from '../api/types'
 
+const POLL_INTERVAL = 30_000
+
 export function Home() {
   const { loading: tokenLoading } = useToken()
   const [popular, setPopular] = useState<ConversationSummary[]>([])
+  const [initialLoad, setInitialLoad] = useState(true)
+  const inflightRef = useRef(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     document.title = 'Petri Disc — Synthetic Discussion'
   }, [])
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  useEffect(() => {
+    if (tokenLoading) return
 
-  const fetchList = useCallback(() => {
-    api.listConversations()
-      .then(list => {
+    const fetchList = async () => {
+      if (inflightRef.current) return
+      inflightRef.current = true
+      try {
+        const list = await api.listConversations()
         const sorted = list
           .filter(c => c.status !== 'failed')
           .sort((a, b) => {
@@ -30,16 +38,20 @@ export function Home() {
           })
           .slice(0, 10)
         setPopular(sorted)
-      })
-      .catch(() => {})
-  }, [])
+      } catch {
+        // silent
+      } finally {
+        inflightRef.current = false
+        setInitialLoad(false)
+        timerRef.current = setTimeout(fetchList, POLL_INTERVAL)
+      }
+    }
 
-  useEffect(() => {
-    if (tokenLoading) return
     fetchList()
-    timerRef.current = setInterval(fetchList, 10000)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [tokenLoading, fetchList])
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [tokenLoading])
+
+  const loading = tokenLoading || initialLoad
 
   return (
     <>
@@ -54,7 +66,14 @@ export function Home() {
         </div>
         <Composer />
 
-        {popular.length > 0 && (
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <div className="spinner" style={{ margin: '0 auto 8px' }} />
+            <p style={{ color: 'var(--muted)', fontSize: '0.84rem' }}>Loading discussions...</p>
+          </div>
+        )}
+
+        {!loading && popular.length > 0 && (
           <>
             <div className="popular-divider">
               <p className="section-label">Popular discussions</p>
