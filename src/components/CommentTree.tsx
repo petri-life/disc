@@ -10,7 +10,7 @@ interface Props {
 }
 
 export function CommentTree({ comments, conversationId, users }: Props) {
-  const tree = useMemo(() => buildTree(comments), [comments])
+  const tree = useMemo(() => buildTree(comments ?? []), [comments])
   const seenRef = useRef(new Set<number>())
 
   // On first render, mark all existing comments as seen (no animation)

@@ -30,13 +30,14 @@ export function usePolling(conversationId: string | undefined) {
       const data = await api.getConversation(conversationId, afterRef.current)
 
       setState(prev => {
-        const newMessages = data.progress.filter(
+        const progress = data.progress ?? []
+        const newMessages = progress.filter(
           p => !prev.messages.some(m => m.id === p.id)
         )
         const allMessages = [...prev.messages, ...newMessages]
 
-        if (data.progress.length > 0) {
-          afterRef.current = data.progress[data.progress.length - 1].id
+        if (progress.length > 0) {
+          afterRef.current = progress[progress.length - 1].id
         }
 
         return {
