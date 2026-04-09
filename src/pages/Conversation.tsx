@@ -96,13 +96,13 @@ export function Conversation() {
             <p className="story-submeta" style={{ marginTop: 8 }}>
               {conversation.agent_count} agents · {conversation.round_count} rounds
               {conversation.created_at && <> · {formatRelative(conversation.created_at)}</>}
-              {thread && <> · {thread.comments.length} comments</>}
+              {thread && <> · {(thread.comments ?? []).length} comments</>}
             </p>
           </div>
           {thread && (
             <div className="result-stats">
               <div className="stat-card">
-                <strong>{thread.comments.length}</strong>
+                <strong>{(thread.comments ?? []).length}</strong>
                 <span>comments</span>
               </div>
               <div className="stat-card">
@@ -125,7 +125,7 @@ export function Conversation() {
       </section>
 
       {/* Thread — shown live as comments arrive */}
-      {thread && thread.comments.length > 0 && (
+      {thread && (thread.comments ?? []).length > 0 && (
         <section className="panel">
           <ThreadView
             thread={thread}
@@ -142,7 +142,7 @@ export function Conversation() {
         </section>
       )}
 
-      {isActive && (!thread || thread.comments.length === 0) && (
+      {isActive && (!thread || (thread.comments ?? []).length === 0) && (
         <p className="waiting-hint">
           Simulation is running — agents are discussing. Comments will appear here as they come in.
         </p>

@@ -21,7 +21,10 @@ export function ThreadView({
   personaMix, isLive,
 }: Props) {
   const preset = getTonePreset(Math.round(personaMix * 100))
-  const post = thread.posts[0]
+  const posts = thread.posts ?? []
+  const comments = thread.comments ?? []
+  const users = thread.users ?? {}
+  const post = posts[0]
   const [briefOpen, setBriefOpen] = useState(false)
 
   return (
@@ -47,9 +50,9 @@ export function ThreadView({
       {/* Comments */}
       <section className="discussion-panel">
         <CommentTree
-          comments={thread.comments}
+          comments={comments}
           conversationId={conversationId}
-          users={thread.users}
+          users={users}
         />
       </section>
     </>
