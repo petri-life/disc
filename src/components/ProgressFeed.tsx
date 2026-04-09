@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import type { ProgressEntry, ConversationStatus } from '../api/types'
 
 interface Props {
@@ -9,12 +8,6 @@ interface Props {
 const TERMINAL = new Set(['done', 'converged', 'failed'])
 
 export function ProgressFeed({ messages, status }: Props) {
-  const endRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [messages.length])
-
   const stages = new Map<string, ProgressEntry[]>()
   for (const msg of messages) {
     const key = msg.stage || 'info'
@@ -42,7 +35,6 @@ export function ProgressFeed({ messages, status }: Props) {
           </div>
         )
       })}
-      <div ref={endRef} />
     </div>
   )
 }

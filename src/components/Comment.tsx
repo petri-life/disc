@@ -11,9 +11,10 @@ interface Props {
   conversationId: string
   users: Record<string, ThreadUser>
   depth: number
+  isNew?: boolean
 }
 
-export function Comment({ node, conversationId, users, depth }: Props) {
+export function Comment({ node, conversationId, users, depth, isNew }: Props) {
   const [upvotes, setUpvotes] = useState(node.upvotes)
   const [voted, setVoted] = useState(false)
   const [showPopover, setShowPopover] = useState(false)
@@ -37,7 +38,7 @@ export function Comment({ node, conversationId, users, depth }: Props) {
   }, [voted, conversationId, node.comment_id, node.upvotes])
 
   return (
-    <article className="comment" data-depth={Math.min(depth, 8)}>
+    <article className={`comment${isNew ? ' comment-new' : ''}`} data-depth={Math.min(depth, 8)}>
       <div className="comment-card">
         <div className="comment-meta">
           <div className="comment-author">

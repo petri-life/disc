@@ -544,6 +544,21 @@ input[type="range"]::-moz-range-thumb {
   padding-left: 18px;
 }
 
+.comment-new > .comment-card {
+  animation: commentReveal 0.5s ease both;
+}
+
+@keyframes commentReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .comment::before {
   content: "";
   position: absolute;
