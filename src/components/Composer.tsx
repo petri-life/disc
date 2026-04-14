@@ -25,12 +25,14 @@ export function Composer() {
       })
       navigate(`/c/${res.conversation_id}`)
     } catch (err) {
-      if (err instanceof ApiError && err.status === 429) {
-        setError('Out of credits. Each token gets 3 conversations.')
-      } else if (err instanceof ApiError) {
-        setError(err.message)
+      if (err instanceof ApiError) {
+        if (err.status === 429) {
+          setError('Credit limit reached.')
+        } else {
+          setError(`Error ${err.status}: ${err.message}`)
+        }
       } else {
-        setError('Something went wrong. Try again.')
+        setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')
       }
       setSubmitting(false)
     }

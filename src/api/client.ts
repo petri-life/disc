@@ -33,7 +33,15 @@ async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new ApiError(res.status, body.detail || `HTTP ${res.status}`)
+    let message = `HTTP ${res.status}`
+    if (typeof body.detail === 'string') {
+      message = body.detail
+    } else if (Array.isArray(body.detail)) {
+      message = body.detail.map((e: { msg?: string }) => e.msg ?? JSON.stringify(e)).join('; ')
+    } else if (body.detail) {
+      message = JSON.stringify(body.detail)
+    }
+    throw new ApiError(res.status, message)
   }
   return res.json()
 }
