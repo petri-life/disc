@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { usePolling } from '../hooks/usePolling'
 import { api } from '../api/client'
@@ -6,10 +6,11 @@ import type { ThreadResponse } from '../api/types'
 import { StatusBadge } from '../components/StatusBadge'
 import { ProgressFeed } from '../components/ProgressFeed'
 import { ThreadView } from '../components/ThreadView'
+import { SimControls } from '../components/SimControls'
 import { topicTitle } from '../lib/topicTitle'
 import { formatRelative } from '../lib/formatTime'
 
-const ACTIVE_STATUSES = new Set(['queued', 'running'])
+const ACTIVE_STATUSES = new Set(['queued', 'running', 'pausing'])
 const THREAD_POLL_INTERVAL = 5000
 
 export function Conversation() {
@@ -20,25 +21,26 @@ export function Conversation() {
   const threadTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const isActive = conversation && ACTIVE_STATUSES.has(conversation.status)
+  const isPaused = conversation?.status === 'paused'
   const title = conversation ? topicTitle(conversation.topic) : ''
 
-  // Poll thread while running, fetch once more when done
+  const fetchThread = useCallback(async () => {
+    if (!id) return
+    try {
+      const data = await api.getThread(id)
+      setThread(data)
+    } catch (err) {
+      if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 202) return
+      setThreadError((err as Error).message)
+    }
+  }, [id])
+
+  // Poll thread while running, fetch once more when done/paused
   useEffect(() => {
     if (!id || !conversation) return
     if (conversation.status === 'queued' || conversation.status === 'failed') return
 
     let cancelled = false
-
-    const fetchThread = async () => {
-      try {
-        const data = await api.getThread(id)
-        if (!cancelled) setThread(data)
-      } catch (err) {
-        // 202 = not ready yet, ignore
-        if (err && typeof err === 'object' && 'status' in err && (err as { status: number }).status === 202) return
-        if (!cancelled) setThreadError((err as Error).message)
-      }
-    }
 
     const poll = async () => {
       await fetchThread()
@@ -53,7 +55,7 @@ export function Conversation() {
       cancelled = true
       if (threadTimerRef.current) clearTimeout(threadTimerRef.current)
     }
-  }, [id, conversation?.status, isActive])
+  }, [id, conversation?.status, isActive, fetchThread])
 
   useEffect(() => {
     if (title) {
@@ -113,6 +115,15 @@ export function Conversation() {
           )}
         </div>
 
+        {/* Sim controls — next round / finish */}
+        {(isActive || isPaused) && (
+          <SimControls
+            conversationId={conversation.conversation_id}
+            status={conversation.status}
+            roundCount={conversation.round_count}
+          />
+        )}
+
         {isActive && messages.length > 0 && (
           <ProgressFeed messages={messages} status={conversation.status} />
         )}
@@ -138,6 +149,8 @@ export function Conversation() {
             startedAt={conversation.started_at}
             finishedAt={conversation.finished_at}
             isLive={!!isActive}
+            isPaused={isPaused}
+            onReplied={fetchThread}
           />
         </section>
       )}

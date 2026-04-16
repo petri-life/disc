@@ -15,7 +15,7 @@ export interface CreateConversationResponse {
   poll: string
 }
 
-export type ConversationStatus = 'queued' | 'running' | 'done' | 'converged' | 'failed'
+export type ConversationStatus = 'queued' | 'running' | 'paused' | 'done' | 'converged' | 'failed'
 
 export interface ConversationSummary {
   conversation_id: string
@@ -82,4 +82,19 @@ export interface ThreadResponse {
 export interface UpvoteResponse {
   comment_id: number
   upvotes: number
+}
+
+export interface CommentBody {
+  content: string
+  parent_comment_id?: number | null
+}
+
+export interface CommentResponse {
+  comment_id: number
+  user_id: number
+}
+
+export interface PauseResumeResponse {
+  conversation_id: string
+  status: ConversationStatus
 }

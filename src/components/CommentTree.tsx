@@ -7,18 +7,18 @@ interface Props {
   comments: ThreadComment[]
   conversationId: string
   users: Record<string, ThreadUser>
+  isPaused?: boolean
+  onReplied?: () => void
 }
 
-export function CommentTree({ comments, conversationId, users }: Props) {
+export function CommentTree({ comments, conversationId, users, isPaused, onReplied }: Props) {
   const tree = useMemo(() => buildTree(comments ?? []), [comments])
   const seenRef = useRef(new Set<number>())
 
-  // On first render, mark all existing comments as seen (no animation)
   const newIds = useMemo(() => {
     const fresh = new Set<number>()
-    for (const c of comments) {
+    for (const c of comments ?? []) {
       if (!seenRef.current.has(c.comment_id)) {
-        // Only animate if we already had some comments (not initial load)
         if (seenRef.current.size > 0) fresh.add(c.comment_id)
         seenRef.current.add(c.comment_id)
       }
@@ -40,6 +40,8 @@ export function CommentTree({ comments, conversationId, users }: Props) {
           users={users}
           depth={0}
           isNew={newIds.has(node.comment_id)}
+          isPaused={isPaused}
+          onReplied={onReplied}
         />
       ))}
     </div>

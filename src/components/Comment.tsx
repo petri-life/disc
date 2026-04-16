@@ -5,6 +5,7 @@ import { formatRelative } from '../lib/formatTime'
 import { renderMarkdown } from '../lib/renderMarkdown'
 import { api, ApiError } from '../api/client'
 import { UserPopover } from './UserPopover'
+import { ReplyComposer } from './ReplyComposer'
 
 interface Props {
   node: CommentNode
@@ -12,12 +13,15 @@ interface Props {
   users: Record<string, ThreadUser>
   depth: number
   isNew?: boolean
+  isPaused?: boolean
+  onReplied?: () => void
 }
 
-export function Comment({ node, conversationId, users, depth, isNew }: Props) {
+export function Comment({ node, conversationId, users, depth, isNew, isPaused, onReplied }: Props) {
   const [upvotes, setUpvotes] = useState(node.upvotes)
   const [voted, setVoted] = useState(false)
   const [showPopover, setShowPopover] = useState(false)
+  const [showReply, setShowReply] = useState(false)
 
   const user = users[String(node.user_id)]
   const bodyHtml = useMemo(() => renderMarkdown(node.content), [node.content])
@@ -66,7 +70,21 @@ export function Comment({ node, conversationId, users, depth, isNew }: Props) {
           <span className="comment-time">{formatRelative(node.created_at)}</span>
         </div>
         <div className="comment-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+        {isPaused && (
+          <div className="comment-actions">
+            <span onClick={() => setShowReply(v => !v)}>reply</span>
+          </div>
+        )}
       </div>
+
+      {showReply && (
+        <ReplyComposer
+          conversationId={conversationId}
+          parentCommentId={node.comment_id}
+          onClose={() => setShowReply(false)}
+          onReplied={() => onReplied?.()}
+        />
+      )}
 
       {node.children.length > 0 && (
         <div className="comment-children">
@@ -77,6 +95,8 @@ export function Comment({ node, conversationId, users, depth, isNew }: Props) {
               conversationId={conversationId}
               users={users}
               depth={depth + 1}
+              isPaused={isPaused}
+              onReplied={onReplied}
             />
           ))}
         </div>

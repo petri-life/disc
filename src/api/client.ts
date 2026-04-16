@@ -6,6 +6,9 @@ import type {
   ConversationDetail,
   ThreadResponse,
   UpvoteResponse,
+  CommentBody,
+  CommentResponse,
+  PauseResumeResponse,
 } from './types'
 
 const API_BASE = import.meta.env.VITE_API_BASE || ''
@@ -68,6 +71,22 @@ export const api = {
   upvote: (id: string, commentId: number) =>
     request<UpvoteResponse>(`/conversations/${id}/upvote/${commentId}`, {
       method: 'POST',
+    }),
+
+  next: (id: string) =>
+    request<PauseResumeResponse>(`/conversations/${id}/next`, {
+      method: 'POST',
+    }),
+
+  finish: (id: string) =>
+    request<PauseResumeResponse>(`/conversations/${id}/finish`, {
+      method: 'POST',
+    }),
+
+  comment: (id: string, body: CommentBody) =>
+    request<CommentResponse>(`/conversations/${id}/comment`, {
+      method: 'POST',
+      body: JSON.stringify(body),
     }),
 }
 

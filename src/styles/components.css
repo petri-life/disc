@@ -541,6 +541,9 @@ input[type="range"]::-moz-range-thumb {
 
 .comment {
   position: relative;
+}
+
+.comment .comment {
   padding-left: 18px;
 }
 
@@ -559,7 +562,7 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
-.comment::before {
+.comment .comment::before {
   content: "";
   position: absolute;
   left: 0;
@@ -683,6 +686,15 @@ input[type="range"]::-moz-range-thumb {
   color: #897362;
   font-size: 0.68rem;
   text-transform: lowercase;
+}
+
+.comment-actions span {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.comment-actions span:hover {
+  color: var(--accent);
 }
 
 .comment-children {
@@ -811,6 +823,12 @@ input[type="range"]::-moz-range-thumb {
 .status-badge.failed {
   background: rgba(180, 50, 50, 0.1);
   color: #b43232;
+}
+
+.status-badge.paused {
+  background: rgba(176, 91, 36, 0.08);
+  color: var(--accent);
+  border: 1px dashed var(--accent-soft);
 }
 
 /* ── Conversation card (browse) ── */
@@ -943,6 +961,96 @@ input[type="range"]::-moz-range-thumb {
 
 .footer a:hover {
   text-decoration: underline;
+}
+
+/* ── Sim controls ── */
+
+.sim-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.sim-controls-error {
+  font-size: 0.82rem;
+  color: #b43232;
+}
+
+.sim-controls-pausing,
+.sim-controls-running {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-controls-hint {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Reply composer ── */
+
+.reply-composer {
+  margin-top: 8px;
+  margin-left: 18px;
+  animation: fadeUp 0.25s ease;
+}
+
+.reply-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: rgba(255, 253, 249, 0.96);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.reply-textarea::placeholder {
+  color: rgba(119, 104, 93, 0.5);
+}
+
+.reply-textarea:focus {
+  border-color: var(--accent-soft);
+}
+
+.reply-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reply-error {
+  font-size: 0.8rem;
+  color: #b43232;
+}
+
+/* ── Add comment button ── */
+
+.add-comment-btn {
+  margin-top: 12px;
+  width: 100%;
+  text-align: center;
+  border-style: dashed;
+}
+
+/* ── Toolbar paused state ── */
+
+.toolbar-pill-paused {
+  border-color: var(--accent-soft);
+  border-style: dashed;
+  color: var(--accent);
 }
 
 /* ── Waiting hint ── */
