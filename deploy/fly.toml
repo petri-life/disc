@@ -1,0 +1,89 @@
+# Fly.io config for the agar-oss backend hosting the Petri Disc app.
+#
+# This is disc-app's deploy config (disc-app is BE+FE deploy-complete; agar-oss
+# is the backend code, kept clean of any curated data). The real curated
+# personas live under disc-app/data/personas/ and are pushed to the Fly volume
+# by deploy/upload-personas.sh — the running container reads them from the
+# mounted /app/data/personas via AGAR_*_PATH below.
+#
+# Deploy:
+#   fly volumes create agar_data --size 1 --region ewr     # one-time
+#   bash deploy/upload-personas.sh                          # one-time per persona change
+#   fly secrets set OPENROUTER_API_KEY=... AGAR_MINT_SECRET=...
+#   fly deploy --config deploy/fly.toml --dockerfile ../agar-oss/Dockerfile ../agar-oss
+
+app = 'agar-api'           # change if your fly app has a different name
+primary_region = 'ewr'
+
+[build]
+
+[env]
+  # Model: AGAR_MODEL controls OASIS-internal naming; the OpenRouter backend
+  # activates whenever OPENROUTER_API_KEY (a secret) is set, and uses the
+  # AGAR_OPENROUTER_MODEL below. Metering only runs on the OpenRouter path —
+  # the Claude-CLI path has no usage.cost data and runs unmetered.
+  AGAR_MODEL = 'haiku'
+  AGAR_OPENROUTER_MODEL = 'google/gemini-2.5-flash'
+
+  # Sim shape (matches the prior agar/fly.toml).
+  # NOTE: the round cap is AGAR_MAX_ROUNDS in the new code (not AGAR_ROUNDS —
+  # that name was dropped in the OSS refactor and is now a silent no-op).
+  AGAR_MAX_CONCURRENT = '1'
+  AGAR_MAX_ROUNDS = '5'
+  # AGAR_SHOW_PERSONAS is intentionally NOT set here. Default = '0' = the
+  # thread response ships only display_name (curated, stable per persona
+  # row), never the raw persona slug or the system-prompt bio. Setting this
+  # to '1' on hosted exposes both — debug only.
+  AGAR_RELOAD = '0'
+
+  # AGAR_HTTP_REFERER is set as a Fly secret by deploy.sh (sourced from
+  # APP_ORIGIN in .env.verify) so this file stays environment-agnostic.
+  AGAR_APP_TITLE = 'Petri Disc'
+
+  # Billing — cents, NOT rounds. New tokens start at 0¢ on hosted; balance comes
+  # from the Stripe webhook (or, for now, a fake-pay call to /credits/add).
+  # The gate refuses to start a round when balance < estimate.
+  AGAR_DEFAULT_CREDIT_CENTS = '0'
+  AGAR_ROUND_ESTIMATE_CENTS = '10'
+
+  # Curated personas — read from the mounted volume, NOT from the OSS image's
+  # synthetic samples. upload-personas.sh ships disc-app/data/personas/ here.
+  AGAR_SARC_PATH        = '/app/data/personas/personas_sarc.jsonl'
+  AGAR_HN_SPICY_PATH    = '/app/data/personas/personas_hn_spicy.jsonl'
+  AGAR_ADVERSARIAL_PATH = '/app/data/personas/personas_adversarial.jsonl'
+  AGAR_CREATIVE_PATH    = '/app/data/personas/personas_creative.jsonl'
+
+  # AGAR_CORS_ORIGINS is set as a Fly secret by deploy.sh, sourced from
+  # APP_ORIGIN in .env.verify. Not committed here so fly.toml is env-agnostic.
+
+  PORT = '8080'
+
+[processes]
+  app = 'uv run uvicorn api.main:app --host 0.0.0.0 --port 8080'
+
+# Persistent volume holds the SQLite DB AND the curated personas, both under
+# /app/data. The OSS image creates /app/data; we add /app/data/personas/ via
+# the upload script.
+[[mounts]]
+  source = 'agar_data'
+  destination = '/app/data'
+  initial_size = '1gb'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    path = '/health'
+
+[[vm]]
+  memory = '1024mb'
+  cpu_kind = 'shared'
+  cpus = 1
