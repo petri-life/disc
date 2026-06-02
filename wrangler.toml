@@ -1,0 +1,24 @@
+# Cloudflare Pages config for disc-app. Bundles the Vite SPA (dist/) AND the
+# auth Pages Functions (functions/). Serves both from petri-disc.pages.dev so
+# the session cookie is first-party — no cross-site cookie problem.
+#
+# Bindings (D1, vars, secrets) defined here flow to the Functions runtime.
+# Frontend env vars (VITE_*) are read at build time from .env.production.
+#
+# Secrets are set via `wrangler pages secret put NAME --project-name petri-disc`.
+
+name = "petri-disc"
+compatibility_date = "2026-05-01"
+pages_build_output_dir = "dist"
+
+[vars]
+# Public, non-secret runtime config. APP_ORIGIN + EMAIL_FROM are injected at
+# deploy time via deploy.sh so prod values come from .env.verify, not committed.
+AGAR_API_BASE = "https://agar-api.fly.dev"
+MAGIC_LINK_TTL_SECONDS = "900"
+SESSION_TTL_SECONDS = "2592000"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "disc_app_db"
+database_id = "2f9b39a3-420e-48f5-8d02-bcede2bbf370"
