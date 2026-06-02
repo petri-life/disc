@@ -96,6 +96,265 @@
   user-select: all;
 }
 
+.user-balance {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.user-chip:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.signin-link {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.signin-link:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+.user-email {
+  user-select: all;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-logout {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.user-logout:hover {
+  color: var(--text);
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px 16px;
+  margin: 24px 0 0;
+}
+
+.account-grid dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+.account-grid dd {
+  margin: 0;
+  word-break: break-all;
+}
+
+.token-pill {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  background: var(--bg-deep);
+  border-radius: 4px;
+  user-select: all;
+}
+
+.conv-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.conv-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.conv-row:last-child {
+  border-bottom: none;
+}
+
+.conv-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.conv-row-title {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-row-title:hover {
+  text-decoration: underline;
+}
+
+.conv-row-cost {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.conv-row-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.conv-row-toggle {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.conv-row-toggle:hover {
+  text-decoration: underline;
+}
+
+.round-cost-list {
+  list-style: none;
+  margin: 8px 0 0 16px;
+  padding: 8px 12px;
+  background: var(--bg-deep);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.round-cost-list li {
+  display: grid;
+  grid-template-columns: 100px 80px 1fr;
+  gap: 12px;
+  padding: 2px 0;
+  color: var(--muted);
+}
+
+.round-cost-list li span:nth-child(2) {
+  color: var(--text);
+  text-align: right;
+}
+
+.round-cost-failed {
+  font-style: italic;
+}
+
+.round-cost-time {
+  text-align: right;
+}
+
+.tier-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tier-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tier-btn:hover {
+  border-color: var(--text);
+}
+
+.tier-btn-active {
+  border-color: var(--accent);
+  background: var(--bg-deep);
+}
+
+.tier-btn-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.tier-btn-tagline {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.tier-btn-cost {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.tier-btn-active .tier-btn-cost {
+  color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .tier-picker {
+    grid-template-columns: 1fr;
+  }
+}
+
+.model-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-deep);
+  color: var(--muted);
+  margin-left: 6px;
+}
+
 .nav-links {
   display: flex;
   gap: 8px;

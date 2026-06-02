@@ -1,9 +1,13 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { BrandMark } from './BrandMark'
 import { useToken } from '../api/token'
+import { formatCents } from '../lib/formatCents'
 
 export function Nav() {
-  const { label } = useToken()
+  const { email, balanceCents, loading } = useToken()
+  const { pathname } = useLocation()
+  // Preserve where the user is so signing in returns them here.
+  const nextParam = pathname !== '/' ? `?next=${encodeURIComponent(pathname)}` : ''
 
   return (
     <header className="masthead">
@@ -15,10 +19,18 @@ export function Nav() {
             <p>Synthetic discussion</p>
           </div>
         </Link>
-        {label && (
-          <div className="user-label" title="Your anonymous ID — mention it to request more credits">
-            {label}
-          </div>
+
+        {loading ? null : email ? (
+          <Link to="/account" className="user-chip" title="Account">
+            <span className="user-email">{email}</span>
+            {balanceCents !== null && (
+              <span className="user-balance"> · {formatCents(balanceCents)}</span>
+            )}
+          </Link>
+        ) : (
+          <Link to={`/login${nextParam}`} className="signin-link">
+            Sign in
+          </Link>
         )}
       </div>
     </header>

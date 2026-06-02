@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import type { ThreadResponse } from '../api/types'
+import { useToken } from '../api/token'
 import { CommentTree } from './CommentTree'
 import { ReplyComposer } from './ReplyComposer'
 import { getTonePreset } from '../lib/tonePresets'
@@ -23,6 +25,8 @@ export function ThreadView({
   thread, conversationId,
   personaMix, isLive, isPaused, onReplied,
 }: Props) {
+  const { email } = useToken()
+  const { pathname } = useLocation()
   const preset = getTonePreset(Math.round(personaMix * 100))
   const posts = thread.posts ?? []
   const comments = thread.comments ?? []
@@ -57,8 +61,9 @@ export function ThreadView({
         </details>
       )}
 
-      {/* Top-level comment composer */}
-      {isPaused && !showTopComment && (
+      {/* Top-level comment composer (gated on auth — agar requires X-API-Key
+          to post; without it the request would 401 at submit). */}
+      {isPaused && !showTopComment && email && (
         <button
           className="btn-secondary add-comment-btn"
           onClick={() => setShowTopComment(true)}
@@ -66,7 +71,15 @@ export function ThreadView({
           + Add comment
         </button>
       )}
-      {isPaused && showTopComment && (
+      {isPaused && !email && (
+        <Link
+          to={`/login?next=${encodeURIComponent(pathname)}`}
+          className="btn-secondary add-comment-btn"
+        >
+          Sign in to comment
+        </Link>
+      )}
+      {isPaused && showTopComment && email && (
         <ReplyComposer
           conversationId={conversationId}
           parentCommentId={null}

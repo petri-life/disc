@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { ThreadUser } from '../api/types'
 import type { CommentNode } from '../lib/buildTree'
 import { formatRelative } from '../lib/formatTime'
 import { renderMarkdown } from '../lib/renderMarkdown'
 import { api, ApiError } from '../api/client'
+import { useToken } from '../api/token'
 import { UserPopover } from './UserPopover'
 import { ReplyComposer } from './ReplyComposer'
 
@@ -18,6 +20,9 @@ interface Props {
 }
 
 export function Comment({ node, conversationId, users, depth, isNew, isPaused, onReplied }: Props) {
+  const { email } = useToken()
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [upvotes, setUpvotes] = useState(node.upvotes)
   const [voted, setVoted] = useState(false)
   const [showPopover, setShowPopover] = useState(false)
@@ -26,7 +31,14 @@ export function Comment({ node, conversationId, users, depth, isNew, isPaused, o
   const user = users[String(node.user_id)]
   const bodyHtml = useMemo(() => renderMarkdown(node.content), [node.content])
 
+  // Send unauthenticated users to /login, preserving where they were so the
+  // callback resumes here. Used by both upvote and reply.
+  const goSignIn = useCallback(() => {
+    navigate(`/login?next=${encodeURIComponent(pathname)}`)
+  }, [navigate, pathname])
+
   const handleUpvote = useCallback(async () => {
+    if (!email) return goSignIn()
     if (voted) return
     setVoted(true)
     setUpvotes(prev => prev + 1)
@@ -39,7 +51,12 @@ export function Comment({ node, conversationId, users, depth, isNew, isPaused, o
         setUpvotes(node.upvotes)
       }
     }
-  }, [voted, conversationId, node.comment_id, node.upvotes])
+  }, [email, goSignIn, voted, conversationId, node.comment_id, node.upvotes])
+
+  const handleReplyClick = () => {
+    if (!email) return goSignIn()
+    setShowReply(v => !v)
+  }
 
   return (
     <article className={`comment${isNew ? ' comment-new' : ''}`} data-depth={Math.min(depth, 8)}>
@@ -72,7 +89,7 @@ export function Comment({ node, conversationId, users, depth, isNew, isPaused, o
         <div className="comment-body" dangerouslySetInnerHTML={{ __html: bodyHtml }} />
         {isPaused && (
           <div className="comment-actions">
-            <span onClick={() => setShowReply(v => !v)}>reply</span>
+            <span onClick={handleReplyClick}>{email ? 'reply' : 'sign in to reply'}</span>
           </div>
         )}
       </div>

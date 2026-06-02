@@ -121,6 +121,7 @@ export function Conversation() {
             conversationId={conversation.conversation_id}
             status={conversation.status}
             roundCount={conversation.round_count}
+            lastRoundCostCents={conversation.last_round_cost_cents ?? 0}
           />
         )}
 

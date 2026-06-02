@@ -6,6 +6,11 @@ interface Props {
   onClose: () => void
 }
 
+// Tiny popover shown when clicking an agent name. Intentionally minimal:
+// the underlying `user.bio` field used to render the full system prompt
+// (which leaked persona-template content); production sims now ship empty
+// bio and we never render it. This component is the seam where a future
+// "see all Frank's comments across sims" link would go.
 export function UserPopover({ user, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -29,7 +34,9 @@ export function UserPopover({ user, onClose }: Props) {
   return (
     <div className="user-popover" ref={ref}>
       <strong>{user.name}</strong>
-      {user.bio && <p>{user.bio}</p>}
+      <p className="user-popover-hint">
+        Agents are recurring characters — same name across sims.
+      </p>
     </div>
   )
 }

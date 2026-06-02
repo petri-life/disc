@@ -9,6 +9,9 @@ import type {
   CommentBody,
   CommentResponse,
   PauseResumeResponse,
+  NextRoundResponse,
+  MyConversationSummary,
+  TiersResponse,
 } from './types'
 
 const API_BASE = import.meta.env.VITE_API_BASE || ''
@@ -53,6 +56,9 @@ export const api = {
   mintToken: () =>
     request<TokenResponse>('/tokens', { method: 'POST' }),
 
+  // Public — fetched once at FE load to build the model picker.
+  tiers: () => request<TiersResponse>('/tiers'),
+
   createConversation: (body: CreateConversationBody) =>
     request<CreateConversationResponse>('/conversations', {
       method: 'POST',
@@ -61,6 +67,10 @@ export const api = {
 
   listConversations: () =>
     request<ConversationSummary[]>('/conversations'),
+
+  // Owner-authenticated list — includes cost history per sim.
+  myConversations: () =>
+    request<MyConversationSummary[]>('/me/conversations'),
 
   getConversation: (id: string, after = 0) =>
     request<ConversationDetail>(`/conversations/${id}?after=${after}`),
@@ -74,7 +84,7 @@ export const api = {
     }),
 
   next: (id: string) =>
-    request<PauseResumeResponse>(`/conversations/${id}/next`, {
+    request<NextRoundResponse>(`/conversations/${id}/next`, {
       method: 'POST',
     }),
 
