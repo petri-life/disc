@@ -103,8 +103,12 @@ web_modules/
 .env
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
 .env.local
+
+# Local secrets for the metering verification script (real OpenRouter key + mint secret)
+.env.verify
 
 # parcel-bundler cache (https://parceljs.org/)
 
