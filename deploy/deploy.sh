@@ -68,12 +68,19 @@ deploy_pages() {
   # EMAIL_FROM sourced from .env.verify; falls back to Resend's onboarding
   # sender for new setups before a domain is verified.
   : "${EMAIL_FROM:=Petri Disc <onboarding@resend.dev>}"
+  # APP_VERSION read from disc-app/VERSION below — passed to both the FE
+  # build (VITE_APP_VERSION for the footer) AND the Pages Function runtime
+  # (APP_VERSION env var for /health) so they always agree.
+  APP_VERSION=$(cat "$DISC_APP/VERSION" | tr -d '[:space:]')
+  [ -n "$APP_VERSION" ] || { echo "FAIL: VERSION file empty or missing"; exit 1; }
+  echo "  deploying version: $APP_VERSION"
   for kv in \
     "AGAR_MINT_SECRET:$AGAR_MINT_SECRET" \
     "RESEND_API_KEY:$RESEND_API_KEY" \
     "SESSION_SIGNING_KEY:$SESSION_SIGNING_KEY" \
     "APP_ORIGIN:$APP_ORIGIN" \
-    "EMAIL_FROM:$EMAIL_FROM"
+    "EMAIL_FROM:$EMAIL_FROM" \
+    "APP_VERSION:$APP_VERSION"
   do
     name="${kv%%:*}"
     val="${kv#*:}"
@@ -85,17 +92,19 @@ deploy_pages() {
   bun x wrangler d1 migrations apply disc_app_db --remote
 
   # Build the FE. Auth lives at /auth/* on the same origin, so VITE_AUTH_API_BASE
-  # is empty (relative fetches go to the Pages Functions).
+  # is empty (relative fetches go to the Pages Functions). APP_VERSION
+  # already set above (used to push the Pages runtime secret).
   cat > .env.production <<EOF
 VITE_API_BASE=https://${FLY_APP}.fly.dev
 VITE_AUTH_API_BASE=
+VITE_APP_VERSION=$APP_VERSION
 EOF
   echo "  build env:"; sed 's/^/    /' .env.production
   bun install
   # Unset any VITE_* that leaked via `set -a; source .env.verify` so Vite
   # reads ONLY the .env.production we just wrote. Otherwise a stale shell
   # export silently overrides the file and a stale URL gets baked in.
-  unset VITE_API_BASE VITE_AUTH_API_BASE
+  unset VITE_API_BASE VITE_AUTH_API_BASE VITE_APP_VERSION
   bun run build
 
   # Pages deploy ships dist/ AND functions/. Branch=main goes to production.

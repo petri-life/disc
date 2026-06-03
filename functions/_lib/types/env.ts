@@ -14,4 +14,10 @@ export interface Env {
   AGAR_MINT_SECRET: string
   RESEND_API_KEY: string
   SESSION_SIGNING_KEY: string
+
+  // Deploy version — source of truth is disc-app/VERSION, pushed at deploy
+  // time by deploy.sh. Treated mechanically as a Pages "secret" only because
+  // Pages has no plain-runtime-var API; the value itself is public and is
+  // served on /health.
+  APP_VERSION: string
 }

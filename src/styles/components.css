@@ -1222,6 +1222,12 @@ input[type="range"]::-moz-range-thumb {
   text-decoration: underline;
 }
 
+.footer-version {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
 /* ── Sim controls ── */
 
 .sim-controls {
