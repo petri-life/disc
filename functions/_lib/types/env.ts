@@ -20,4 +20,12 @@ export interface Env {
   // Pages has no plain-runtime-var API; the value itself is public and is
   // served on /health.
   APP_VERSION: string
+
+  // Stripe — TEST or LIVE mode depending on which keys are pushed. Keys
+  // never reach the browser; checkout/webhook are server-only.
+  STRIPE_SECRET_KEY: string         // sk_test_... or sk_live_...
+  STRIPE_WEBHOOK_SECRET: string     // whsec_... — signs every webhook delivery
+  STRIPE_PRICE_10: string           // price_... for the $10 pack
+  STRIPE_PRICE_20: string           // price_... for the $20 pack
+  STRIPE_PRICE_50: string           // price_... for the $50 pack
 }

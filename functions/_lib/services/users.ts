@@ -12,6 +12,10 @@ export interface User {
   agar_token: string | null
   created_at: number
   last_login_at: number | null
+  // Linked Stripe customer. Null until the user clicks "Buy credits" for the
+  // first time. Once set, never changes — Stripe's customer is the stable
+  // anchor for receipts, refunds, the billing portal.
+  stripe_customer_id: string | null
 }
 
 export interface MagicLink {
@@ -114,6 +118,7 @@ export async function upsertUserByEmail(
     agar_token: null,
     created_at: nowSeconds,
     last_login_at: nowSeconds,
+    stripe_customer_id: null,
   }
 }
 
@@ -125,5 +130,57 @@ export async function setUserAgarToken(
   await db
     .prepare('UPDATE users SET agar_token = ? WHERE id = ?')
     .bind(agarToken, userId)
+    .run()
+}
+
+export async function setUserStripeCustomer(
+  db: D1Database,
+  userId: number,
+  stripeCustomerId: string,
+): Promise<void> {
+  await db
+    .prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?')
+    .bind(stripeCustomerId, userId)
+    .run()
+}
+
+// ── Stripe event idempotency ────────────────────────────────
+
+/** Returns true if this event_id has already been processed (skip), false if
+ *  it's new (record + process). Atomic via INSERT OR IGNORE on PK. */
+export async function isStripeEventProcessed(
+  db: D1Database,
+  eventId: string,
+): Promise<boolean> {
+  const row = await db
+    .prepare('SELECT 1 FROM stripe_events WHERE event_id = ?')
+    .bind(eventId)
+    .first<{ '1': number }>()
+  return row !== null
+}
+
+export async function recordStripeEvent(
+  db: D1Database,
+  args: {
+    event_id: string
+    event_type: string
+    user_id: number | null
+    credited_cents: number | null
+    processed_at: number
+  },
+): Promise<void> {
+  await db
+    .prepare(
+      'INSERT OR IGNORE INTO stripe_events ' +
+        '(event_id, event_type, user_id, credited_cents, processed_at) ' +
+        'VALUES (?, ?, ?, ?, ?)',
+    )
+    .bind(
+      args.event_id,
+      args.event_type,
+      args.user_id,
+      args.credited_cents,
+      args.processed_at,
+    )
     .run()
 }
