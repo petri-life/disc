@@ -74,13 +74,26 @@ deploy_pages() {
   APP_VERSION=$(cat "$DISC_APP/VERSION" | tr -d '[:space:]')
   [ -n "$APP_VERSION" ] || { echo "FAIL: VERSION file empty or missing"; exit 1; }
   echo "  deploying version: $APP_VERSION"
+  # Stripe secrets are optional during initial setup — only push them if
+  # they're actually set in .env.verify. Lets you deploy the frontend
+  # before Stripe is configured, then bring billing online with a redeploy.
+  STRIPE_SECRETS=()
+  for v in STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET STRIPE_PRICE_10 STRIPE_PRICE_20 STRIPE_PRICE_50; do
+    if [ -n "${!v:-}" ]; then
+      STRIPE_SECRETS+=("$v:${!v}")
+    else
+      echo "  WARN: $v not set in .env.verify — billing will be partially configured"
+    fi
+  done
+
   for kv in \
     "AGAR_MINT_SECRET:$AGAR_MINT_SECRET" \
     "RESEND_API_KEY:$RESEND_API_KEY" \
     "SESSION_SIGNING_KEY:$SESSION_SIGNING_KEY" \
     "APP_ORIGIN:$APP_ORIGIN" \
     "EMAIL_FROM:$EMAIL_FROM" \
-    "APP_VERSION:$APP_VERSION"
+    "APP_VERSION:$APP_VERSION" \
+    "${STRIPE_SECRETS[@]}"
   do
     name="${kv%%:*}"
     val="${kv#*:}"

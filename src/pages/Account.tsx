@@ -1,19 +1,41 @@
-import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { useToken } from '../api/token'
 import { api, ApiError } from '../api/client'
+import { billingApi, BillingApiError } from '../api/billing'
 import { formatCents } from '../lib/formatCents'
 import { formatRelative } from '../lib/formatTime'
 import { topicTitle } from '../lib/topicTitle'
 import type { MyConversationSummary } from '../api/types'
 
+// Three credit packs. Labels are display-only; the server validates `pack`
+// is one of {10,20,50} and resolves to its own STRIPE_PRICE_* env var.
+const PACKS: Array<{ pack: '10' | '20' | '50'; price: string; credits: string }> = [
+  { pack: '10', price: '$10', credits: '800 credits' },
+  { pack: '20', price: '$20', credits: '1,600 credits' },
+  { pack: '50', price: '$50', credits: '4,000 credits' },
+]
+
 // /account — signed-in user's profile. Top: email, live balance, agar token,
 // logout. Below: list of their conversations with per-sim total cost and a
 // drill-down showing per-round costs.
 export function Account() {
-  const { email, agarToken, balanceCents, loading, logout } = useToken()
+  const { email, agarToken, balanceCents, loading, logout, refresh } = useToken()
   const [convs, setConvs] = useState<MyConversationSummary[] | null>(null)
   const [convsError, setConvsError] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const paid = params.get('paid')
+  const [buyingPack, setBuyingPack] = useState<string | null>(null)
+  const [buyError, setBuyError] = useState<string | null>(null)
+  // Initial balance at mount — if it changes (webhook credited us) we know
+  // to clear the "adding credits" banner. Captured once via ref so the
+  // poll-loop doesn't keep resetting it.
+  const initialBalanceRef = useRef<number | null>(null)
+  useEffect(() => {
+    if (initialBalanceRef.current === null && balanceCents !== null) {
+      initialBalanceRef.current = balanceCents
+    }
+  }, [balanceCents])
 
   useEffect(() => {
     if (!agarToken) return
@@ -27,6 +49,54 @@ export function Account() {
       })
     return () => { cancelled = true }
   }, [agarToken])
+
+  // After Stripe redirects back with ?paid=true, poll /auth/me every 3s for
+  // up to 60s until the balance changes (the webhook fires asynchronously
+  // from Stripe — usually within seconds). Stop polling once balance bumps;
+  // clear the ?paid= param so a reload doesn't re-trigger.
+  useEffect(() => {
+    if (paid !== 'true') return
+    let cancelled = false
+    let attempts = 0
+    const tick = async () => {
+      if (cancelled || attempts >= 20) return  // 20 * 3s = 60s
+      attempts++
+      try { await refresh() } catch { /* keep trying */ }
+      // Detect bump from the snapshot taken before checkout. If balanceCents
+      // has gone up since the ref was set, webhook fired — done.
+      if (
+        initialBalanceRef.current !== null &&
+        balanceCents !== null &&
+        balanceCents > initialBalanceRef.current
+      ) {
+        setParams({}, { replace: true })
+        return
+      }
+      setTimeout(tick, 3000)
+    }
+    void tick()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paid])
+
+  const startCheckout = async (pack: '10' | '20' | '50') => {
+    if (buyingPack) return
+    setBuyingPack(pack)
+    setBuyError(null)
+    try {
+      const { url } = await billingApi.checkout(pack)
+      // Snapshot balance NOW so the post-paid poll knows what to compare against
+      if (balanceCents !== null) initialBalanceRef.current = balanceCents
+      window.location.href = url   // hard redirect to Stripe-hosted checkout
+    } catch (err) {
+      setBuyingPack(null)
+      setBuyError(
+        err instanceof BillingApiError
+          ? err.message
+          : 'Could not start checkout. Try again.',
+      )
+    }
+  }
 
   if (loading) {
     return (
@@ -72,10 +142,40 @@ export function Account() {
           </dd>
         </dl>
 
-        <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: 24 }}>
-          Stripe checkout isn't live yet. To add credits, send your API token to
-          the operator and they'll top you up.
-        </p>
+        {/* Post-checkout banners */}
+        {paid === 'true' && (
+          <div className="paid-banner paid-banner-success" role="status">
+            Payment received — crediting your balance…
+          </div>
+        )}
+        {paid === 'cancelled' && (
+          <div className="paid-banner paid-banner-cancel" role="status">
+            Checkout cancelled. No charge made.
+          </div>
+        )}
+
+        <h3 style={{ marginTop: 32, marginBottom: 12, fontSize: '0.95rem' }}>
+          Add credits
+        </h3>
+        <div className="pack-grid">
+          {PACKS.map(p => (
+            <button
+              key={p.pack}
+              className="pack-btn"
+              onClick={() => void startCheckout(p.pack)}
+              disabled={buyingPack !== null}
+            >
+              <span className="pack-btn-price">{p.price}</span>
+              <span className="pack-btn-credits">{p.credits}</span>
+              {buyingPack === p.pack && (
+                <span className="spinner spinner-inline" style={{ marginTop: 4 }} />
+              )}
+            </button>
+          ))}
+        </div>
+        {buyError && (
+          <div className="error-box" style={{ marginTop: 12 }}>{buyError}</div>
+        )}
 
         <div style={{ marginTop: 32, display: 'flex', gap: 12 }}>
           <button className="btn-secondary" onClick={() => void logout()} style={{ flex: 1 }}>

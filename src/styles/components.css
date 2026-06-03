@@ -1228,6 +1228,75 @@ input[type="range"]::-moz-range-thumb {
   opacity: 0.6;
 }
 
+.pack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.pack-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.05s;
+}
+
+.pack-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-deep);
+}
+
+.pack-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.pack-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pack-btn-price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pack-btn-credits {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+@media (max-width: 540px) {
+  .pack-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.paid-banner {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.paid-banner-success {
+  background: rgba(134, 174, 163, 0.18);
+  border: 1px solid var(--mint);
+  color: var(--text);
+}
+
+.paid-banner-cancel {
+  background: var(--bg-deep);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
 /* ── Sim controls ── */
 
 .sim-controls {
