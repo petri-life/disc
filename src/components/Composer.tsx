@@ -11,7 +11,7 @@ import type { Tier } from '../api/types'
 // know about. Unknown tiers (added server-side later) fall back to the raw name.
 const TIER_LABELS: Record<string, { label: string; tagline: string }> = {
   flash:  { label: 'Fast',    tagline: 'Quick discussions, broad coverage' },
-  pro:    { label: 'Default', tagline: 'Sharper takes, more nuance' },
+  smart:  { label: 'Smart',   tagline: 'Sharper takes, more nuance' },
   sonnet: { label: 'Premium', tagline: 'Most distinctive personas' },
 }
 
